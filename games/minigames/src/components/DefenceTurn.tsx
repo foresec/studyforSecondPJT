@@ -1,8 +1,9 @@
-import { useCallback, useState ,useRef} from "react";
+import { useCallback, useState, useRef } from "react";
 
 import Timer from "./Timer";
-import ClickToDefense from "./ClickToDefense"; 
-import Test from "./Test"; 
+// import ClickToDefense from "./ClickToDefense";
+import BlowToDefense from "./BlowToDefense";
+// import Test from "./Test"
 
 import styles from "./DefenceTurn.module.css";
 
@@ -10,34 +11,44 @@ const DefenceTurn = () => {
   // 게임이 진행되는 중인지 판단하는 state
 
   const [onTime, setOnTime] = useState<boolean>(false);
-  const [isDone, setIsDone] = useState<boolean>(false)
+  const [isDone, setIsDone] = useState<boolean>(false);
 
   // focus가 옮겨가지 않도록 마우스 이벤트를 막기 위한 ref
   const preventMouseRef = useRef<HTMLDivElement>(null);
 
-  
   // 게임이 끝남을 수행하는 function
   const handleTimer = useCallback(() => {
     setOnTime(!onTime);
-  },[onTime]);
+  }, [onTime]);
 
-  const handleResult = useCallback(()=> {
-    setIsDone(!isDone)
-  },[isDone])
+  const handleResult = useCallback(() => {
+    setIsDone(!isDone);
+  }, [isDone]);
 
   // focus가 옮겨가지 않도록 마우스 이벤트를 막기 위한 function
-  const preventMouseDown = (e:React.MouseEvent) => {
+  const preventMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
   };
 
   // console.log("ontime?", onTime)
   return (
-    <div className={styles.box} ref={preventMouseRef} tabIndex={0} onMouseDown={preventMouseDown}>
-      <div>  
+    <div
+      className={styles.box}
+      ref={preventMouseRef}
+      tabIndex={0}
+      onMouseDown={preventMouseDown}
+    >
+      <div>
         <h1>DEFENSE</h1>
-        <Timer handleTimer={handleTimer} onTime={onTime} handleResult={handleResult} isDone={isDone}/>
-        <ClickToDefense handleTimer={handleTimer} onTime={onTime} handleResult={handleResult} isDone={isDone}/>
-        <Test/>
+        <Timer
+          handleTimer={handleTimer}
+          onTime={onTime}
+          handleResult={handleResult}
+          isDone={isDone}
+        />
+        {/* <ClickToDefense handleTimer={handleTimer} onTime={onTime} handleResult={handleResult} isDone={isDone}/> */}
+        <BlowToDefense />
+        {/* <Test/> */}
       </div>
     </div>
   );

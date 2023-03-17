@@ -66,7 +66,7 @@ const Timer = ({ onTime, handleTimer, isDone ,handleResult}: TimerProps) => {
     <div>
       {!onTime && !isDone ? <div>{preSec}</div>:<div>시작!</div>}
       <h3>Timer</h3>
-      <div>{sec}초</div>
+      <div>{sec}</div>
     </div>
   );
 };
