@@ -1,102 +1,59 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useRef, useState } from "react";
 
 const BlowToDefense = () => {
-  const [volume, setVolume] = useState<number>(0);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const [count, setCount] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  useEffect(() => {
-    const canvas = canvasRef.current!;
-    const canvasCtx = canvas.getContext("2d");
-    const WIDTH = canvas.width;
-    const HEIGHT = canvas.height;
+  console.log(count);
 
-    let drawVisual: number;
+  const handleMicInput = async () => {
+    const audioContext = new AudioContext();
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const source = audioContext.createMediaStreamSource(stream);
+    const analyzer = audioContext.createAnalyser();
+    analyzer.fftSize = 2048;
+    source.connect(analyzer);
 
-    const startAudioContext = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
+    const bufferLength = analyzer.frequencyBinCount;
+    const data = new Uint8Array(bufferLength);
 
-        const audioContext = new AudioContext();
-        const analyser = audioContext.createAnalyser();
-        analyser.fftSize = 4096;
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const barWidth = canvasWidth / bufferLength;
 
-        const source = audioContext.createMediaStreamSource(stream);
-        source.connect(analyser);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        analyser.getByteTimeDomainData(dataArray);
-
-        const sliceWidth = WIDTH * 1.0 / bufferLength;
-
-        const draw = () => {
-          drawVisual = requestAnimationFrame(draw);
-					setTimeout(draw, 1000/100);
-
-          analyser.getByteTimeDomainData(dataArray);
-					console.log("do")
-          canvasCtx!.fillStyle = "rgb(200, 200, 200)";
-          canvasCtx!.fillRect(0, 0, WIDTH, HEIGHT);
-
-          canvasCtx!.lineWidth = 2;
-          canvasCtx!.strokeStyle = "rgb(0, 0, 0)";
-
-          canvasCtx!.beginPath();
-
-          let x = 0;
-
-          for (let i = 0; i < bufferLength; i++) {
-            const v = dataArray[i] / 128.0;
-            const y = v * HEIGHT / 2;
-
-            if (i === 0) {
-              canvasCtx!.moveTo(x, y);
-            } else {
-              canvasCtx!.lineTo(x, y);
-            }
-
-            x += sliceWidth;
-          }
-
-          canvasCtx!.lineTo(canvas.width, canvas.height / 2);
-          canvasCtx!.stroke();
-        };
-
-        draw();
-
-        streamRef.current = stream;
-        audioContextRef.current = audioContext;
-      } catch (error) {
-        console.error(error);
-      }
+    const draw = (level: number) => {
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      ctx.fillStyle = "green";
+      ctx.fillRect(0, canvasHeight - level, canvasWidth, level);
     };
 
-    startAudioContext();
+    const drawFrame = () => {
+      requestAnimationFrame(drawFrame);
+      analyzer.getByteFrequencyData(data);
 
-    return () => {
-      if (drawVisual) {
-        cancelAnimationFrame(drawVisual);
-      }
+      const sum = data.reduce((acc, cur) => acc + cur, 0);
+      const level = sum / data.length;
+      draw(level);
 
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => {
-          track.stop();
-        });
-      }
-
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
+      if (level > 50) {
+        setCount((prevCount) => prevCount + 1);
       }
     };
-  }, []);
+    drawFrame();
+  };
 
   return (
     <div>
-      <canvas ref={canvasRef} width="500" height="200"></canvas>
+      <canvas ref={canvasRef} width={300} height={100} />
+      {count >= 50 ? <div>성공!</div> : null}
+      <button onClick={handleMicInput}>마이크 입력 시작</button>
     </div>
   );
 };
