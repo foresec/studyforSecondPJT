@@ -47,7 +47,7 @@ const DefenceTurn = () => {
           isDone={isDone}
         />
         {/* <ClickToDefense handleTimer={handleTimer} onTime={onTime} handleResult={handleResult} isDone={isDone}/> */}
-        <BlowToDefense />
+        <BlowToDefense handleTimer={handleTimer} onTime={onTime} handleResult={handleResult} isDone={isDone}/>
         {/* <Test/> */}
       </div>
     </div>
